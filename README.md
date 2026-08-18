@@ -4,35 +4,7 @@ Este projeto consiste em um Assistente Virtual de suporte focado em dúvidas sob
 
 ---
 
-## 🏗️ Arquitetura do Projeto
 
-O fluxo de funcionamento baseia-se na integração entre a interface de chat (Frontend) e o motor de IA (n8n Workflow). Abaixo um diagrama detalhando as duas rotas principais do sistema: Ingestão de Conhecimento e Interação com o Usuário.
-
-```mermaid
-graph TD
-    %% Ingestão de Dados
-    subgraph "Ingestão de Dados (Backend)"
-        GD[Google Drive<br>Novos PDFs] -->|Gatilho| N8N_Ingest[n8n: Download & Split]
-        N8N_Ingest --> OpenAI_Emb1[OpenAI<br>Gerar Embeddings]
-        OpenAI_Emb1 --> Pinecone[(Pinecone<br>Vector Store)]
-    end
-
-    %% Interação do Usuário
-    subgraph "Interação do Usuário (Frontend & Agent)"
-        User((Usuário)) <-->|Chat| Streamlit[Streamlit App]
-        Streamlit <-->|POST Request| Webhook[n8n: Webhook]
-        
-        Webhook --> Agent[n8n: AI Agent<br>GPT-4o + Memória]
-        Agent -->|Busca de contexto| Tool[Vector Store Tool]
-        Tool --> OpenAI_Emb2[OpenAI<br>Gerar Embeddings]
-        OpenAI_Emb2 --> Pinecone
-        Pinecone -->|Retorna fragmentos| Tool
-        Tool --> Agent
-        Agent -->|Gera resposta final| Webhook
-    end
-```
-
----
 
 ## 📂 Estrutura de Arquivos
 
