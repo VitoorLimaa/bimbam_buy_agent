@@ -1,0 +1,283 @@
+{
+    "name": "Agente RAG - buy",
+    "nodes": [
+        {
+            "parameters": {
+                "operation": "download",
+                "fileId": "={{$json.id}}",
+                "options": {}
+            },
+            "id": "a83538c3-cd2c-4217-ae14-ddd127b100cf",
+            "name": "Google Drive Download",
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 2,
+            "position": [
+                -832,
+                960
+            ]
+        },
+        {
+            "parameters": {
+                "options": {
+                    "systemMessage": "Você é um agente corporativo profissional. Responda às perguntas com base nos documentos fornecidos pela ferramenta base_conhecimento. Seja educado, direto e objetivo. Se não souber a resposta com base nos documentos, diga claramente que não possui essa informação."
+                }
+            },
+            "id": "957b3457-10d7-448a-baae-8b1986cbfc59",
+            "name": "AI Agent",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.6,
+            "position": [
+                -992,
+                416
+            ]
+        },
+        {
+            "parameters": {
+                "model": "gpt-4o",
+                "options": {}
+            },
+            "id": "6eacb3bc-ad55-464b-8fe1-91e9676d9c45",
+            "name": "OpenAI Chat Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1,
+            "position": [
+                -1056,
+                656
+            ]
+        },
+        {
+            "parameters": {
+                "sessionId": "={{ $json.body.sessionId }}"
+            },
+            "id": "9d853e64-630f-4e8c-bb09-5a6ed393ee03",
+            "name": "Window Buffer Memory",
+            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+            "typeVersion": 1.2,
+            "position": [
+                -928,
+                656
+            ]
+        },
+        {
+            "parameters": {
+                "name": "base_conhecimento",
+                "description": "Busca informações em PDFs e documentos enviados previamente pela empresa para responder à dúvida do usuário."
+            },
+            "id": "d8ddd621-589c-43cb-a07a-c214c0576260",
+            "name": "Vector Store Tool",
+            "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+            "typeVersion": 1,
+            "position": [
+                -800,
+                656
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "text",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.5,
+            "position": [
+                -608,
+                448
+            ],
+            "id": "ab5f7c04-ef78-42be-8520-6d27bb2afe6b",
+            "name": "Respond to Webhook"
+        },
+        {
+            "parameters": {
+                "pineconeIndex": "bimbam-buy",
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+            "typeVersion": 1,
+            "position": [
+                -608,
+                960
+            ],
+            "id": "097789c4-902d-4f42-96e2-aa8374b7d480",
+            "name": "Pinecone Vector Store"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+            "typeVersion": 1.1,
+            "position": [
+                -544,
+                1184
+            ],
+            "id": "06bf7dbb-0958-4635-ae65-6b39259d14e1",
+            "name": "Default Data Loader"
+        },
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                -1056,
+                960
+            ],
+            "id": "55d539ad-4e4a-45f5-b0c7-4c357bee2dd4",
+            "name": "When clicking ‘Execute workflow’"
+        },
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "2393dcb5-b4e7-4ebf-849b-131cf439e8a0",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [
+                -1296,
+                464
+            ],
+            "id": "26b9fdee-5421-4356-81b0-f4488570cb2d",
+            "name": "Webhook",
+            "webhookId": "2393dcb5-b4e7-4ebf-849b-131cf439e8a0"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "id": "e4585e50-9c71-477c-a496-5126cfcc9713",
+            "name": "OpenAI Embeddings",
+            "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+            "typeVersion": 1.1,
+            "position": [
+                -704,
+                1184
+            ]
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Window Buffer Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Vector Store Tool": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Drive Download": {
+            "main": [
+                [
+                    {
+                        "node": "Pinecone Vector Store",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Default Data Loader": {
+            "ai_document": [
+                [
+                    {
+                        "node": "Pinecone Vector Store",
+                        "type": "ai_document",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "When clicking ‘Execute workflow’": {
+            "main": [
+                [
+                    {
+                        "node": "Google Drive Download",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Embeddings": {
+            "ai_embedding": [
+                [
+                    {
+                        "node": "Pinecone Vector Store",
+                        "type": "ai_embedding",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Pinecone Vector Store": {
+            "ai_vectorStore": [
+                [
+                    {
+                        "node": "Vector Store Tool",
+                        "type": "ai_vectorStore",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false
+    },
+    "versionId": "cffc187a-ef58-4379-a521-e0186f27771b",
+    "meta": {
+        "instanceId": "3d7ff072886a0100aaee140bd1d11b319ff074d3a034ac1044e770734a9c6a56"
+    },
+    "nodeGroups": [],
+    "id": "aHmBtjdL45ZMFpE9",
+    "tags": []
+}
